@@ -1,30 +1,84 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from "vue";
+const url = ref("");
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div class="app-wrapper">
+    <el-container>
+      <el-header class="custom-header">
+        <h1 class="header-title">
+          MINI <span class="subtitle">URL SHORTENER</span>
+        </h1>
+      </el-header>
+
+      <el-main class="main-content">
+        <el-input
+          v-model="url"
+          placeholder="Paste the long URL and make it MINI..."
+          size="large"
+          clearable
+        >
+        </el-input>
+      </el-main>
+    </el-container>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.custom-header {
+  padding: 1rem;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.header-title {
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #303133;
+  margin: 0;
+  user-select: none;
+  text-align: center;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.subtitle {
+  font-weight: 400;
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+
+.main-content {
+  width: 30em;
+  margin: 0 auto;
+}
+</style>
+
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: rgb(207, 167, 205);
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  width: 100%;
 }
 </style>
