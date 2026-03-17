@@ -1,7 +1,10 @@
 import { RedisStore } from 'connect-redis'
+import cors from 'cors'
 import 'dotenv/config'
 import express, { Express, Router } from 'express'
+import { rateLimit } from 'express-rate-limit'
 import session from 'express-session'
+import helmet from 'helmet'
 import { createClient, RedisClientType } from 'redis'
 
 const app: Express = express()
@@ -12,9 +15,27 @@ const redisClient: RedisClientType = createClient({
 })
 await redisClient.connect()
 
-if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET is not defined')
-}
+if (!process.env.ALLOWED_ORIGINS) throw new Error('ENV ALLOWED_ORIGINS is not defined')
+if (!process.env.SESSION_SECRET) throw new Error('ENV SESSION_SECRET is not defined')
+
+app.use(helmet())
+
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS.split(','),
+    credentials: true,
+  })
+)
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: 'Too many requests, please try again later.',
+  })
+)
 
 app.use(
   session({
