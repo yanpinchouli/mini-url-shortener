@@ -5,7 +5,16 @@ import express, { Express, Router } from 'express'
 import { rateLimit } from 'express-rate-limit'
 import session from 'express-session'
 import helmet from 'helmet'
+import { pinoHttp } from 'pino-http'
 import { createClient, RedisClientType } from 'redis'
+import logger from './utils/logger.js'
+
+if (!process.env.PORT) throw new Error('ENV PORT is not defined')
+if (!process.env.NODE_ENV) throw new Error('ENV NODE_ENV is not defined')
+if (!process.env.REDIS_URL) throw new Error('ENV REDIS_URL is not defined')
+if (!process.env.DATABASE_URL) throw new Error('ENV DATABASE_URL is not defined')
+if (!process.env.SESSION_SECRET) throw new Error('ENV SESSION_SECRET is not defined')
+if (!process.env.ALLOWED_ORIGINS) throw new Error('ENV ALLOWED_ORIGINS is not defined')
 
 const app: Express = express()
 const port: number = Number(process.env.PORT)
@@ -14,9 +23,6 @@ const redisClient: RedisClientType = createClient({
   url: process.env.REDIS_URL,
 })
 await redisClient.connect()
-
-if (!process.env.ALLOWED_ORIGINS) throw new Error('ENV ALLOWED_ORIGINS is not defined')
-if (!process.env.SESSION_SECRET) throw new Error('ENV SESSION_SECRET is not defined')
 
 app.use(helmet())
 
@@ -53,10 +59,12 @@ app.use(
   })
 )
 
+app.use(pinoHttp({ logger }))
+
 const router: Router = express.Router()
 
 app.use('/api/v1', router)
 
 app.listen(port, () => {
-  console.log(`Server running at http://127.0.0.1:${port}`)
+  logger.info(`Server running at http://127.0.0.1:${port}`)
 })
