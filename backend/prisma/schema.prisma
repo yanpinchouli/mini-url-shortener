@@ -16,14 +16,22 @@ datasource db {
 model User {
   id           String @id @default(uuid()) @db.Uuid
   email        String @unique
-  passwordHash String
+  passwordHash String @map("password_hash")
   urls         Url[]
+
+  @@map("users")
 }
 
 model Url {
-  id     String  @id @default(uuid()) @db.Uuid
-  userId String? @db.Uuid
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id          BigInt   @id @default(autoincrement())
+  userId      String?  @map("user_id") @db.Uuid
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  originalUrl String   @map("original_url")
+  alias       String?  @unique @db.VarChar(50)
+  clickCount  Int      @default(0) @map("click_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
+  @@map("urls")
 }
