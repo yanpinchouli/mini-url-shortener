@@ -15,7 +15,7 @@ const AuthController = {
     })
 
     if (exists) {
-      logger.info({ email }, 'User already exists')
+      logger.warn({ email }, 'User already exists')
       throw new createHttpError.Conflict('User already exists')
     }
 
@@ -33,7 +33,30 @@ const AuthController = {
     logger.info({ user }, 'Signup successful')
     res.status(201).json({ message: 'Signup successful' })
   },
-  login: async () => {},
+  login: async (req: Request, res: Response) => {
+    const { email, password }: CreateUser = req.body
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, passwordHash: true },
+    })
+
+    if (!user) {
+      logger.warn({ email }, 'User not found')
+      throw new createHttpError.Unauthorized('Invalid credentials')
+    }
+
+    const isValid = await argon2.verify(user.passwordHash, password)
+
+    if (!isValid) {
+      logger.warn({ email }, 'Invalid credentials')
+      throw new createHttpError.Unauthorized('Invalid credentials')
+    }
+
+    req.session.userId = user.id
+
+    logger.info({ user }, 'Login successful')
+    res.status(200).json({ message: 'Login successful' })
+  },
   logout: async () => {},
 }
 
