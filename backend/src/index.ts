@@ -10,7 +10,7 @@ import { pinoHttp } from 'pino-http'
 import { createClient } from 'redis'
 import logger from './utils/logger.js'
 import authRouter from './routes/auth.route.js'
-import { generateSpec } from './lib/openapi.js'
+import { generateScalarConfig } from './lib/openapi.js'
 import { apiReference } from '@scalar/express-api-reference'
 import { isHttpError } from 'http-errors'
 
@@ -84,46 +84,14 @@ const router = express.Router()
 router.use(authRouter)
 
 app.use('/api/v1', router)
+
 app.use(
   '/docs',
   (_req, res, next) => {
     res.removeHeader('Content-Security-Policy')
     next()
   },
-  apiReference({
-    content: generateSpec(),
-    metaData: { title: 'Mini URL API Docs' },
-    customCss: '.scalar-mcp-layer { display: none !important; }',
-    theme: 'moon',
-    forceDarkModeState: 'dark',
-    showDeveloperTools: 'never',
-    hideDownloadButton: true,
-    agent: { disabled: true },
-    telemetry: false,
-    hiddenClients: {
-      shell: ['httpie', 'wget'],
-      js: ['jquery', 'xhr', 'ofetch'],
-      node: true,
-      c: true,
-      clojure: true,
-      csharp: true,
-      dart: true,
-      fsharp: true,
-      go: true,
-      http: true,
-      java: true,
-      kotlin: true,
-      objc: true,
-      ocaml: true,
-      php: true,
-      powershell: true,
-      python: true,
-      r: true,
-      ruby: true,
-      rust: true,
-      swift: true,
-    },
-  })
+  apiReference(generateScalarConfig())
 )
 
 app.use((_req, res) => {
