@@ -14,7 +14,7 @@ A simple URL shortener service.
 - Create short URLs with custom alias
 - Guest links expire in 7 days
 - Registered users get permanent links
-- SShort URL click tracking
+- Short URL click tracking
 
 ## Getting Started
 
