@@ -68,6 +68,15 @@ const router: Router = express.Router()
 
 app.use('/api/v1', router)
 
+app.use((_req, res) => {
+  res.status(404).json({ message: 'Not Found' })
+})
+
+app.use((err: Error, _req: Request, res: Response) => {
+  logger.error(err)
+  res.status(500).json({ message: 'Internal Server Error' })
+})
+
 app.listen(port, () => {
   logger.info(`Server running at http://127.0.0.1:${port}`)
 })
