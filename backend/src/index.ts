@@ -62,6 +62,8 @@ app.use(
 
 app.use(pinoHttp({ logger }))
 
+app.use(express.json())
+
 const router: Router = express.Router()
 
 app.use('/api/v1', router)
