@@ -64,9 +64,20 @@ app.use(
   })
 )
 
-app.use(pinoHttp({ logger }))
-
 app.use(express.json())
+
+app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      req: ({ method, url }) => ({ method, url }),
+      res: ({ statusCode }) => ({ statusCode }),
+    },
+    customLogLevel: (_req, res, err) => {
+      return err || res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
+    },
+  })
+)
 
 const router: Router = express.Router()
 
