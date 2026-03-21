@@ -57,7 +57,16 @@ const AuthController = {
     logger.info({ user }, 'Login successful')
     res.status(200).json({ message: 'Login successful' })
   },
-  logout: async () => {},
+  logout: async (req: Request, res: Response) => {
+    if (!req.session.userId) return res.status(200).json({ message: 'Logout successful' })
+
+    const userId = req.session.userId
+
+    req.session.destroy(() => {
+      logger.info({ userId }, 'Logout successful')
+      res.status(200).json({ message: 'Logout successful' })
+    })
+  },
 }
 
 export default AuthController

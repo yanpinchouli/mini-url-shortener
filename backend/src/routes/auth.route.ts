@@ -9,6 +9,7 @@ const router = express.Router()
 
 router.post('/auth/signup', validate({ body: CreateUserSchema }), AuthController.signup)
 router.post('/auth/login', AuthController.login)
+router.post('/auth/logout', AuthController.logout)
 
 registerPath('/auth/signup', {
   post: {
@@ -37,6 +38,17 @@ registerPath('/auth/login', {
     responses: {
       200: { description: 'Login successful' },
       401: { description: 'Invalid credentials' },
+    },
+    security: [],
+  },
+})
+
+registerPath('/auth/logout', {
+  post: {
+    tags: ['Auth'],
+    summary: 'logout',
+    responses: {
+      200: { description: 'Logout successful' },
     },
     security: [],
   },
