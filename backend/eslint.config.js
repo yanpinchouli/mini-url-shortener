@@ -6,5 +6,10 @@ import prettierPlugin from 'eslint-plugin-prettier/recommended'
 export default defineConfig(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
-  prettierPlugin
+  prettierPlugin,
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  }
 )

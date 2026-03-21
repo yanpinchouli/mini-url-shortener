@@ -2,7 +2,7 @@ import { RedisStore } from 'connect-redis'
 import cors from 'cors'
 import 'dotenv/config'
 import express from 'express'
-import type { Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import { rateLimit } from 'express-rate-limit'
 import session from 'express-session'
 import helmet from 'helmet'
@@ -12,6 +12,7 @@ import logger from './utils/logger.js'
 import authRouter from './routes/auth.route.js'
 import { generateSpec } from './lib/openapi.js'
 import { apiReference } from '@scalar/express-api-reference'
+import { isHttpError } from 'http-errors'
 
 if (!process.env.PORT) throw new Error('ENV PORT is not defined')
 if (!process.env.NODE_ENV) throw new Error('ENV NODE_ENV is not defined')
@@ -79,7 +80,8 @@ app.use(
   })
 )
 
-const router: Router = express.Router()
+const router = express.Router()
+router.use(authRouter)
 
 app.use('/api/v1', router)
 app.use(
@@ -128,11 +130,17 @@ app.use((_req, res) => {
   res.status(404).json({ message: 'Not Found' })
 })
 
-app.use((err: Error, _req: Request, res: Response) => {
-  logger.error(err)
-  res.status(500).json({ message: 'Internal Server Error' })
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  const status = isHttpError(err) ? err.status : 500
+  const message = isHttpError(err) && err.expose ? err.message : 'Internal Server Error'
+
+  if (status >= 500) logger.error(err)
+  else logger.warn(err)
+
+  res.status(status).json({ message })
 })
 
 app.listen(port, () => {
   logger.info(`Server running at http://127.0.0.1:${port}`)
+  logger.info(`Docs available at http://127.0.0.1:${port}/docs`)
 })
