@@ -112,3 +112,5 @@ app.listen(port, () => {
   logger.info(`Server running at http://127.0.0.1:${port}`)
   logger.info(`Docs available at http://127.0.0.1:${port}/docs`)
 })
+
+export default app
