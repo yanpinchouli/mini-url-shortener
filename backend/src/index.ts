@@ -1,33 +1,29 @@
+import 'dotenv/config'
+
+import { apiReference } from '@scalar/express-api-reference'
 import { RedisStore } from 'connect-redis'
 import cors from 'cors'
-import 'dotenv/config'
-import express from 'express'
 import type { NextFunction, Request, Response } from 'express'
+import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import session from 'express-session'
 import helmet from 'helmet'
-import { pinoHttp } from 'pino-http'
-import { createClient } from 'redis'
-import logger from './utils/logger.js'
-import authRouter from './routes/auth.route.js'
-import { generateScalarConfig } from './lib/openapi.js'
-import { apiReference } from '@scalar/express-api-reference'
 import { isHttpError } from 'http-errors'
+import { pinoHttp } from 'pino-http'
+
+import { generateScalarConfig } from './lib/openapi.js'
+import { redisClient } from './lib/redis.js'
+import authRouter from './routes/auth.route.js'
+import logger from './utils/logger.js'
 
 if (!process.env.PORT) throw new Error('ENV PORT is not defined')
 if (!process.env.NODE_ENV) throw new Error('ENV NODE_ENV is not defined')
-if (!process.env.REDIS_URL) throw new Error('ENV REDIS_URL is not defined')
 if (!process.env.DATABASE_URL) throw new Error('ENV DATABASE_URL is not defined')
 if (!process.env.SESSION_SECRET) throw new Error('ENV SESSION_SECRET is not defined')
 if (!process.env.ALLOWED_ORIGINS) throw new Error('ENV ALLOWED_ORIGINS is not defined')
 
 const app = express()
 const port = Number(process.env.PORT)
-
-const redisClient = createClient({
-  url: process.env.REDIS_URL,
-})
-await redisClient.connect()
 
 app.use(helmet())
 
