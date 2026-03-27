@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import createHttpError from 'http-errors'
 
 export const authenticateSession = (req: Request, _res: Response, next: NextFunction) => {

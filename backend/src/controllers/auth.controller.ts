@@ -1,9 +1,10 @@
-import type { Request, Response } from 'express'
-import type { CreateUser } from '../types/user.type.js'
-import { prisma } from '../lib/prisma.js'
-import logger from '../utils/logger.js'
 import argon2 from 'argon2'
+import type { Request, Response } from 'express'
 import createHttpError from 'http-errors'
+
+import { prisma } from '../lib/prisma.js'
+import type { CreateUser } from '../types/user.type.js'
+import logger from '../utils/logger.js'
 
 const AuthController = {
   signup: async (req: Request, res: Response) => {

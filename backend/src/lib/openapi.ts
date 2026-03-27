@@ -1,5 +1,6 @@
-import { createDocument } from 'zod-openapi'
 import type { ZodOpenApiPathsObject } from 'zod-openapi'
+import { createDocument } from 'zod-openapi'
+
 import pkg from '../../package.json' with { type: 'json' }
 
 const paths: ZodOpenApiPathsObject = {}

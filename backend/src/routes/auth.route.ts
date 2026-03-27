@@ -1,9 +1,10 @@
 import express from 'express'
-import { validate } from '../middleware/validate.middleware.js'
-import { CreateUserSchema } from '../types/user.type.js'
+import { z } from 'zod'
+
 import AuthController from '../controllers/auth.controller.js'
 import { registerPath } from '../lib/openapi.js'
-import { z } from 'zod'
+import { validate } from '../middleware/validate.middleware.js'
+import { CreateUserSchema } from '../types/user.type.js'
 
 const router = express.Router()
 

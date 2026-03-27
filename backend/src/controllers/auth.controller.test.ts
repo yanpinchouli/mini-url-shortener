@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import request from 'supertest'
-import app from '../index.js'
 import argon2 from 'argon2'
-import { prisma } from '../lib/prisma.js'
 import { randomUUID } from 'crypto'
+import request from 'supertest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import app from '../index.js'
+import { prisma } from '../lib/prisma.js'
 
 vi.mock('../lib/prisma.ts', () => ({
   prisma: {
