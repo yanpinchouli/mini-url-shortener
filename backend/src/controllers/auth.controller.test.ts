@@ -3,8 +3,8 @@ import { randomUUID } from 'crypto'
 import request from 'supertest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import app from '../index.js'
-import { prisma } from '../lib/prisma.js'
+import app from '@/index.js'
+import { prisma } from '@/lib/prisma.js'
 
 vi.mock('../lib/prisma.ts', () => ({
   prisma: {

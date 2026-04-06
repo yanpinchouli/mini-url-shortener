@@ -2,9 +2,9 @@ import argon2 from 'argon2'
 import type { Request, Response } from 'express'
 import createHttpError from 'http-errors'
 
-import { prisma } from '../lib/prisma.js'
-import { CreateUserSchema } from '../types/user.type.js'
-import logger from '../utils/logger.js'
+import { prisma } from '@/lib/prisma.js'
+import { CreateUserSchema } from '@/types/user.type.js'
+import logger from '@/utils/logger.js'
 
 const AuthController = {
   async signup(req: Request, res: Response) {
