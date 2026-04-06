@@ -5,6 +5,9 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig(
+  {
+    ignores: ['generated/**', 'coverage/**'],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   prettierPlugin,
