@@ -10,6 +10,7 @@ import session from 'express-session'
 import helmet from 'helmet'
 import { isHttpError } from 'http-errors'
 import { pinoHttp } from 'pino-http'
+import z from 'zod'
 
 import { generateScalarConfig } from './lib/openapi.js'
 import { redisClient } from './lib/redis.js'
@@ -95,6 +96,10 @@ app.use((_req, res) => {
 })
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof z.ZodError) {
+    return res.status(400).json(z.flattenError(err))
+  }
+
   const status = isHttpError(err) ? err.status : 500
   const message = isHttpError(err) && err.expose ? err.message : 'Internal Server Error'
 
