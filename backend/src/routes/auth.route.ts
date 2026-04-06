@@ -1,5 +1,5 @@
 import express from 'express'
-import { z } from 'zod'
+import z from 'zod'
 
 import AuthController from '@/controllers/auth.controller.js'
 import { registerPath } from '@/lib/openapi.js'
