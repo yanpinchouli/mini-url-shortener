@@ -5,11 +5,11 @@ import pkg from '../../package.json' with { type: 'json' }
 
 const paths: ZodOpenApiPathsObject = {}
 
-export const registerPath = (path: string, item: ZodOpenApiPathsObject[string]) => {
+export function registerPath(path: string, item: ZodOpenApiPathsObject[string]) {
   paths[path] = item
 }
 
-export const generateScalarConfig = () => {
+export function generateScalarConfig() {
   const content = createDocument({
     openapi: '3.1.0',
     info: { title: 'Mini URL Shortener API', version: pkg.version },

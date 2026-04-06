@@ -1,6 +1,6 @@
 import pino from 'pino'
 
-const maskEmail = (email: string) => {
+function maskEmail(email: string) {
   const [name, domain] = email.split('@')
   return `${name.slice(0, 2)}***@${domain}`
 }
