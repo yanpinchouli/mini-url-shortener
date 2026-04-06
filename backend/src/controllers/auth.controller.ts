@@ -3,12 +3,13 @@ import type { Request, Response } from 'express'
 import createHttpError from 'http-errors'
 
 import { prisma } from '../lib/prisma.js'
-import type { CreateUser } from '../types/user.type.js'
+import { CreateUserSchema } from '../types/user.type.js'
 import logger from '../utils/logger.js'
 
 const AuthController = {
-  signup: async (req: Request, res: Response) => {
-    const { email, password }: CreateUser = req.body
+  async signup(req: Request, res: Response) {
+    const body = CreateUserSchema.parse(req.body)
+    const { email, password } = body
 
     const exists = await prisma.user.findUnique({
       where: { email },
@@ -34,8 +35,8 @@ const AuthController = {
     logger.info({ user }, 'Signup successful')
     res.status(201).json({ message: 'Signup successful' })
   },
-  login: async (req: Request, res: Response) => {
-    const { email, password }: CreateUser = req.body
+  async login(req: Request, res: Response) {
+    const { email, password } = req.body
     const user = await prisma.user.findUnique({
       where: { email },
       select: { id: true, passwordHash: true },
@@ -58,7 +59,7 @@ const AuthController = {
     logger.info({ user }, 'Login successful')
     res.status(200).json({ message: 'Login successful' })
   },
-  logout: async (req: Request, res: Response) => {
+  async logout(req: Request, res: Response) {
     if (!req.session.userId) return res.status(200).json({ message: 'Logout successful' })
 
     const userId = req.session.userId

@@ -1,14 +1,13 @@
 import express from 'express'
 import { z } from 'zod'
 
-import AuthController from '../controllers/auth.controller.js'
-import { registerPath } from '../lib/openapi.js'
-import { validate } from '../middleware/validate.middleware.js'
-import { CreateUserSchema } from '../types/user.type.js'
+import AuthController from '@/controllers/auth.controller.js'
+import { registerPath } from '@/lib/openapi.js'
+import { CreateUserSchema } from '@/types/user.type.js'
 
 const router = express.Router()
 
-router.post('/auth/signup', validate({ body: CreateUserSchema }), AuthController.signup)
+router.post('/auth/signup', AuthController.signup)
 router.post('/auth/login', AuthController.login)
 router.post('/auth/logout', AuthController.logout)
 
@@ -33,7 +32,7 @@ registerPath('/auth/login', {
     summary: 'login',
     requestBody: {
       content: {
-        'application/json': { schema: z.object({ email: z.string(), password: z.string() }) },
+        'application/json': { schema: CreateUserSchema.extend({ password: z.string() }) },
       },
     },
     responses: {
