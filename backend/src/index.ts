@@ -12,10 +12,12 @@ import { isHttpError } from 'http-errors'
 import { pinoHttp } from 'pino-http'
 import z from 'zod'
 
-import { generateScalarConfig } from './lib/openapi.js'
-import { redisClient } from './lib/redis.js'
-import authRouter from './routes/auth.route.js'
-import logger from './utils/logger.js'
+import { generateScalarConfig } from '@/lib/openapi.js'
+import { redisClient } from '@/lib/redis.js'
+import authRouter from '@/routes/auth.route.js'
+import redirectRouter from '@/routes/redirect.route.js'
+import urlRouter from '@/routes/url.route.js'
+import logger from '@/utils/logger.js'
 
 if (!process.env.PORT) throw new Error('ENV PORT is not defined')
 if (!process.env.NODE_ENV) throw new Error('ENV NODE_ENV is not defined')
@@ -77,10 +79,11 @@ app.use(
   })
 )
 
-const router = express.Router()
-router.use(authRouter)
+const apiRouter = express.Router()
+apiRouter.use(authRouter)
+apiRouter.use(urlRouter)
 
-app.use('/api/v1', router)
+app.use('/api/v1', apiRouter)
 
 app.use(
   '/docs',
@@ -91,9 +94,7 @@ app.use(
   apiReference(generateScalarConfig())
 )
 
-app.use((_req, res) => {
-  res.status(404).json({ message: 'Not Found' })
-})
+app.use('/', redirectRouter)
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof z.ZodError) {

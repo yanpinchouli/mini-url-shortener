@@ -2,7 +2,7 @@ import express from 'express'
 import z from 'zod'
 
 import AuthController from '@/controllers/auth.controller.js'
-import { registerPath } from '@/lib/openapi.js'
+import { registerPath, withMessage } from '@/lib/openapi.js'
 import { CreateUserSchema } from '@/types/user.type.js'
 
 const router = express.Router()
@@ -14,13 +14,13 @@ router.post('/auth/logout', AuthController.logout)
 registerPath('/auth/signup', {
   post: {
     tags: ['Auth'],
-    summary: 'signup',
+    summary: 'Signup',
     requestBody: {
       content: { 'application/json': { schema: CreateUserSchema } },
     },
     responses: {
-      201: { description: 'Signup successful' },
-      409: { description: 'User already exists' },
+      201: withMessage('Signup successful', 'Signup successful'),
+      409: withMessage('User already exists', 'User already exists'),
     },
     security: [],
   },
@@ -29,15 +29,15 @@ registerPath('/auth/signup', {
 registerPath('/auth/login', {
   post: {
     tags: ['Auth'],
-    summary: 'login',
+    summary: 'Login',
     requestBody: {
       content: {
         'application/json': { schema: CreateUserSchema.extend({ password: z.string() }) },
       },
     },
     responses: {
-      200: { description: 'Login successful' },
-      401: { description: 'Invalid credentials' },
+      200: withMessage('Login successful', 'Login successful'),
+      401: withMessage('Invalid credentials', 'Invalid credentials'),
     },
     security: [],
   },
@@ -46,9 +46,9 @@ registerPath('/auth/login', {
 registerPath('/auth/logout', {
   post: {
     tags: ['Auth'],
-    summary: 'logout',
+    summary: 'Logout',
     responses: {
-      200: { description: 'Logout successful' },
+      200: withMessage('Logout successful', 'Logout successful'),
     },
     security: [],
   },

@@ -9,6 +9,17 @@ export function registerPath(path: string, item: ZodOpenApiPathsObject[string]) 
   paths[path] = item
 }
 
+export function withMessage(content: string, desc?: string) {
+  return {
+    description: desc,
+    content: {
+      'application/json': {
+        schema: { properties: { message: { example: content } } },
+      },
+    },
+  }
+}
+
 export function generateScalarConfig() {
   const content = createDocument({
     openapi: '3.1.0',
