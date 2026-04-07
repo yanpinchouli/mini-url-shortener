@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express'
 import createHttpError from 'http-errors'
 import { nanoid } from 'nanoid'
-import Sqids from 'sqids'
 
 import { prisma } from '@/lib/prisma.js'
 import { redisClient } from '@/lib/redis.js'
+import { sqids } from '@/lib/sqids.js'
 import { CreateUrlSchema, UrlCache, UserCreateUrlSchema } from '@/types/url.type.js'
 
 // 8 chars to minimize collision probability, see https://zelark.github.io/nano-id-cc/
@@ -14,11 +14,6 @@ const MIN_SHORT_CODE_LENGTH = 8
 const TEMP_URL_CACHE_TTL = 60 * 60 * 24 * 7 // 7 days
 const PERMANENT_URL_CACHE_TTL = 60 * 60 * 24 // 24 hours
 
-const sqids = new Sqids({
-  alphabet: 'otYI1m5ZsG3guxCJ4z6dTKaBUPrbONWSDeLVj9wAkqfERnXHMQp2li0yc87Fhv',
-  minLength: MIN_SHORT_CODE_LENGTH,
-})
-
 const UrlController = {
   /**
    * Redirect to original url
@@ -26,6 +21,7 @@ const UrlController = {
    * - if short code is not valid, return 404
    * - searching in Redis first, if not found, search in DB
    * - if found, increment click count
+   * - jobs/syncClickCounts.ts will sync click counts from Redis to DB
    */
   async redirectToOriginalUrl(req: Request, res: Response) {
     const shortCode = req.params.shortCode as string
@@ -45,6 +41,7 @@ const UrlController = {
     if (permanentUrlCache.originalUrl) {
       await redisClient.hIncrBy(`url:perm:${shortCode}`, 'clickCount', 1)
       await redisClient.expire(`url:perm:${shortCode}`, PERMANENT_URL_CACHE_TTL)
+      await redisClient.sAdd('url:perm:clicks:pending', shortCode)
       res.redirect(302, permanentUrlCache.originalUrl)
       return
     }
@@ -62,10 +59,12 @@ const UrlController = {
       originalUrl: url.originalUrl,
       createdAt: url.createdAt.toISOString(),
       clickCount: url.clickCount + 1,
+      id: url.id,
     }
 
     await redisClient.hSet(`url:perm:${shortCode}`, payload)
     await redisClient.expire(`url:perm:${shortCode}`, PERMANENT_URL_CACHE_TTL)
+    await redisClient.sAdd('url:perm:clicks:pending', shortCode)
 
     res.redirect(302, url.originalUrl)
   },
@@ -84,7 +83,7 @@ const UrlController = {
       shortCode = nanoid(MIN_SHORT_CODE_LENGTH)
     } while (await redisClient.exists(`url:temp:${shortCode}`))
 
-    const payload: UrlCache = {
+    const payload: Omit<UrlCache, 'id'> = {
       originalUrl,
       createdAt: new Date().toISOString(),
       clickCount: 0,
@@ -130,6 +129,7 @@ const UrlController = {
       originalUrl: url.originalUrl,
       createdAt: url.createdAt.toISOString(),
       clickCount: url.clickCount,
+      id: url.id,
     }
 
     await redisClient.hSet(`url:perm:${shortCode}`, payload)

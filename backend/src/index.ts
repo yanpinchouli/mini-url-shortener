@@ -9,9 +9,11 @@ import { rateLimit } from 'express-rate-limit'
 import session from 'express-session'
 import helmet from 'helmet'
 import { isHttpError } from 'http-errors'
+import nodeCron from 'node-cron'
 import { pinoHttp } from 'pino-http'
 import z from 'zod'
 
+import { syncClickCounts } from '@/jobs/syncClickCounts.js'
 import { generateScalarConfig } from '@/lib/openapi.js'
 import { redisClient } from '@/lib/redis.js'
 import authRouter from '@/routes/auth.route.js'
@@ -109,6 +111,9 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
   res.status(status).json({ message })
 })
+
+nodeCron.schedule('*/10 * * * *', syncClickCounts)
+logger.info('Cron job scheduled')
 
 app.listen(port, () => {
   logger.info(`Server running at http://127.0.0.1:${port}`)

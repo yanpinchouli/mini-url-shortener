@@ -12,4 +12,5 @@ export type UrlCache = {
   originalUrl: string
   createdAt: string
   clickCount: number
+  id: number
 }
