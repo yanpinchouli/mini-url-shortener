@@ -10,7 +10,7 @@ export const UrlSchema = z.object({
   updatedAt: z.iso.datetime(),
 })
 
-export const RedirectUrlSchema = UrlSchema.pick({ alias: true })
+export const RedirectUrlSchema = z.object({ shortCode: UrlSchema.shape.alias })
 
 export const CreateUrlSchema = UrlSchema.pick({ originalUrl: true })
 
