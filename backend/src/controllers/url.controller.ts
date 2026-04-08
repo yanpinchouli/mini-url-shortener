@@ -107,7 +107,7 @@ const UrlController = {
   /**
    * User can create a permanent url:
    * - with a custom alias (must be unique)
-   * - if no alias is provided, generate short code via sqids (encoded from url DB id)
+   * - if no alias is provided, generate short code via nanoid
    * - permanently stored in DB
    * - cached in Redis for 24 hours, TTL refreshed on each click
    */
