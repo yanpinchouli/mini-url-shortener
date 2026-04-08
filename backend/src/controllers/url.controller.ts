@@ -37,7 +37,7 @@ const UrlController = {
       logger.warn(z.treeifyError(parsed.error), 'Invalid short code / alias')
       throw createHttpError.NotFound()
     }
-    const shortCode = parsed.data.alias
+    const shortCode = parsed.data.shortCode
 
     const tempUrlCache = await redisClient.hGetAll(`url:temp:${shortCode}`)
     if (tempUrlCache.originalUrl) {
@@ -145,6 +145,24 @@ const UrlController = {
 
     const baseUrl = `${req.protocol}://${req.host}`
     res.status(201).json({ message: `${baseUrl}/${shortCode}` })
+  },
+
+  async getShortUrls(req: Request, res: Response) {
+    const userId = req.session.userId!
+
+    const shortUrls = await prisma.url.findMany({ where: { userId } })
+    res.status(200).json(shortUrls)
+  },
+
+  async deleteShortUrl(req: Request, res: Response) {
+    const { id } = DeleteUrlSchema.parse(req.params)
+    const userId = req.session.userId!
+
+    // deleteMany avoids throwing when record not found
+    const { count } = await prisma.url.deleteMany({ where: { id, userId } })
+    logger.info({ id, userId, count }, 'Short url deleted')
+
+    res.sendStatus(204)
   },
 }
 
