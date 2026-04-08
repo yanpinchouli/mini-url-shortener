@@ -24,10 +24,10 @@ model User {
 
 model Url {
   id          Int      @id @default(autoincrement())
-  userId      String?  @map("user_id") @db.Uuid
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String   @map("user_id") @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   originalUrl String   @map("original_url")
-  alias       String?  @unique @db.VarChar(50)
+  alias       String   @unique @db.VarChar(50)
   clickCount  Int      @default(0) @map("click_count")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

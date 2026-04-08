@@ -1,15 +1,23 @@
 import type { Request, Response } from 'express'
 import createHttpError from 'http-errors'
-import { nanoid } from 'nanoid'
+import { customAlphabet } from 'nanoid'
+import z from 'zod'
 
 import { prisma } from '@/lib/prisma.js'
 import { redisClient } from '@/lib/redis.js'
-import { sqids } from '@/lib/sqids.js'
-import { CreateUrlSchema, UrlCache, UserCreateUrlSchema } from '@/types/url.type.js'
+import {
+  CreateUrlSchema,
+  DeleteUrlSchema,
+  RedirectUrlSchema,
+  UrlCache,
+  UserCreateUrlSchema,
+} from '@/types/url.type.js'
+import logger from '@/utils/logger.js'
 
-// 8 chars to minimize collision probability, see https://zelark.github.io/nano-id-cc/
-// Also applied to sqids to keep a single length constant
-const MIN_SHORT_CODE_LENGTH = 8
+// 9 chars to minimize collision probability, see https://zelark.github.io/nano-id-cc/
+const MIN_NANOID_LENGTH = 9
+const NANOID_ALPHABET = '0123456789_abcdefghijklmnopqrstuvwxyz-'
+const nanoid = customAlphabet(NANOID_ALPHABET, MIN_NANOID_LENGTH)
 
 const TEMP_URL_CACHE_TTL = 60 * 60 * 24 * 7 // 7 days
 const PERMANENT_URL_CACHE_TTL = 60 * 60 * 24 // 24 hours
@@ -24,11 +32,12 @@ const UrlController = {
    * - jobs/syncClickCounts.ts will sync click counts from Redis to DB
    */
   async redirectToOriginalUrl(req: Request, res: Response) {
-    const shortCode = req.params.shortCode as string
-
-    if (shortCode.length < MIN_SHORT_CODE_LENGTH) {
-      throw new createHttpError.NotFound()
+    const parsed = RedirectUrlSchema.safeParse(req.params)
+    if (!parsed.success) {
+      logger.warn(z.treeifyError(parsed.error), 'Invalid short code / alias')
+      throw createHttpError.NotFound()
     }
+    const shortCode = parsed.data.alias
 
     const tempUrlCache = await redisClient.hGetAll(`url:temp:${shortCode}`)
     if (tempUrlCache.originalUrl) {
@@ -46,9 +55,8 @@ const UrlController = {
       return
     }
 
-    const id: number | undefined = sqids.decode(shortCode)[0]
     const url = await prisma.url.findFirst({
-      where: id !== undefined ? { OR: [{ id }, { alias: shortCode }] } : { alias: shortCode },
+      where: { alias: shortCode },
     })
 
     if (!url) {
@@ -80,7 +88,7 @@ const UrlController = {
     // make sure short code is unique
     let shortCode
     do {
-      shortCode = nanoid(MIN_SHORT_CODE_LENGTH)
+      shortCode = nanoid()
     } while (await redisClient.exists(`url:temp:${shortCode}`))
 
     const payload: Omit<UrlCache, 'id'> = {
@@ -106,7 +114,7 @@ const UrlController = {
   async createShortUrlAsUser(req: Request, res: Response) {
     const body = UserCreateUrlSchema.parse(req.body)
     const { originalUrl, alias } = body
-    const { userId } = req.session
+    const userId = req.session.userId!
 
     if (alias) {
       const url = await prisma.url.findUnique({ where: { alias } })
@@ -115,15 +123,15 @@ const UrlController = {
       }
     }
 
+    const shortCode = alias || nanoid()
+
     const url = await prisma.url.create({
       data: {
         originalUrl,
-        alias,
+        alias: shortCode,
         userId,
       },
     })
-
-    const shortCode = alias || sqids.encode([url.id])
 
     const payload: UrlCache = {
       originalUrl: url.originalUrl,

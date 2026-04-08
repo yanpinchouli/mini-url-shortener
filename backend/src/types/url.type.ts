@@ -1,16 +1,25 @@
 import z from 'zod'
 
-export const CreateUrlSchema = z.object({
+export const UrlSchema = z.object({
+  id: z.number().int().positive(),
+  userId: z.uuid(),
   originalUrl: z.url(),
+  alias: z.string().toLowerCase().min(5).max(50),
+  clickCount: z.number().int().nonnegative(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
-export const UserCreateUrlSchema = CreateUrlSchema.extend({
-  alias: z.string().optional(),
+export const RedirectUrlSchema = UrlSchema.pick({ alias: true })
+
+export const CreateUrlSchema = UrlSchema.pick({ originalUrl: true })
+
+export const UserCreateUrlSchema = UrlSchema.pick({ originalUrl: true, alias: true }).partial({
+  alias: true,
 })
 
-export type UrlCache = {
-  originalUrl: string
-  createdAt: string
-  clickCount: number
-  id: number
-}
+export const DeleteUrlSchema = UrlSchema.pick({ id: true })
+
+export type Url = z.infer<typeof UrlSchema>
+
+export type UrlCache = Omit<Url, 'userId' | 'alias' | 'updatedAt'>
