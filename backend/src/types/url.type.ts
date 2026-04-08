@@ -18,7 +18,9 @@ export const UserCreateUrlSchema = UrlSchema.pick({ originalUrl: true, alias: tr
   alias: true,
 })
 
-export const DeleteUrlSchema = UrlSchema.pick({ id: true })
+export const DeleteUrlSchema = z.object({
+  id: z.coerce.number().int().positive(),
+})
 
 export type Url = z.infer<typeof UrlSchema>
 

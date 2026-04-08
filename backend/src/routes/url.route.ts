@@ -1,9 +1,10 @@
 import express from 'express'
+import z from 'zod'
 
 import UrlController from '@/controllers/url.controller.js'
 import { registerPath, withMessage } from '@/lib/openapi.js'
 import { authenticateSession } from '@/middleware/auth.middleware.js'
-import { UserCreateUrlSchema } from '@/types/url.type.js'
+import { UrlSchema, UserCreateUrlSchema } from '@/types/url.type.js'
 
 const router = express.Router()
 
@@ -16,8 +17,8 @@ router.post('/urls', async (req, res) => {
 })
 
 router.use(authenticateSession)
-// router.get('/urls')
-// router.delete('/urls/:id')
+router.get('/urls', UrlController.getShortUrls)
+router.delete('/urls/:id', UrlController.deleteShortUrl)
 
 registerPath('/urls', {
   post: {
@@ -35,7 +36,32 @@ registerPath('/urls', {
         'The alias is already in use (Authenticated user only)'
       ),
     },
-    security: [],
+  },
+  get: {
+    tags: ['Urls'],
+    summary: 'Get URLs of the current user',
+    responses: {
+      200: {
+        description: 'OK',
+        content: {
+          'application/json': {
+            schema: z.array(UrlSchema),
+          },
+        },
+      },
+    },
+  },
+})
+
+registerPath('/urls/{id}', {
+  delete: {
+    tags: ['Urls'],
+    summary: 'Delete short URL',
+    description: 'User only can delete their own URLs',
+    parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+    responses: {
+      204: { description: 'No content' },
+    },
   },
 })
 
