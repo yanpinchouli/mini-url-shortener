@@ -65,6 +65,7 @@ const AuthController = {
     const userId = req.session.userId
 
     req.session.destroy(() => {
+      res.clearCookie('_session')
       logger.info({ userId }, 'Logout successful')
       res.status(200).json({ message: 'Logout successful' })
     })

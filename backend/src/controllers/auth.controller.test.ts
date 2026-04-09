@@ -1,12 +1,13 @@
 import argon2 from 'argon2'
 import { randomUUID } from 'crypto'
 import request from 'supertest'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import app from '@/index.js'
+import app from '@/app.js'
 import { prisma } from '@/lib/prisma.js'
+import { redisClient } from '@/lib/redis.js'
 
-vi.mock('../lib/prisma.ts', () => ({
+vi.mock('@/lib/prisma.js', () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
@@ -14,6 +15,15 @@ vi.mock('../lib/prisma.ts', () => ({
     },
   },
 }))
+
+beforeAll(async () => {
+  if (!redisClient.isOpen) await redisClient.connect()
+})
+
+afterAll(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  await redisClient.quit()
+})
 
 describe('/api/v1/auth/signup', () => {
   beforeEach(() => {
@@ -58,7 +68,7 @@ describe('/api/v1/auth/signup', () => {
     expect(res.status).toBe(400)
   })
 
-  it('should return 400 when password is invalid', async () => {
+  it('should return 400 when password is too short', async () => {
     const res = await request(app)
       .post('/api/v1/auth/signup')
       .send({ email: 'abc@example.com', password: 'too-short' })
@@ -67,8 +77,12 @@ describe('/api/v1/auth/signup', () => {
   })
 })
 
-describe('/api/v1/auth/login', async () => {
-  const hashedPassword = await argon2.hash('1qaz2wsx3edc')
+describe('/api/v1/auth/login', () => {
+  let hashedPassword: string
+
+  beforeAll(async () => {
+    hashedPassword = await argon2.hash('1qaz2wsx3edc')
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -98,10 +112,10 @@ describe('/api/v1/auth/login', async () => {
     expect(res.status).toBe(401)
   })
 
-  it('should return 401 when credentials are invalid', async () => {
+  it('should return 401 when password is wrong', async () => {
     const res = await request(app)
       .post('/api/v1/auth/login')
-      .send({ email: 'wrong@email.com', password: 'wrong-password' })
+      .send({ email: 'abc@example.com', password: 'wrong-password' })
 
     expect(res.status).toBe(401)
   })
@@ -112,7 +126,7 @@ describe('/api/v1/auth/logout', () => {
     vi.clearAllMocks()
   })
 
-  it('should return 200 when logout is successful', async () => {
+  it('should return 200 and clear cookie when logout is successful', async () => {
     const hashedPassword = await argon2.hash('1qaz2wsx3edc')
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
       id: randomUUID(),
@@ -131,7 +145,9 @@ describe('/api/v1/auth/logout', () => {
 
     const logoutRes = await testAgent.post('/api/v1/auth/logout')
     expect(logoutRes.status).toBe(200)
-    expect(logoutRes.headers['set-cookie']).toBeUndefined()
+
+    const cookies = [logoutRes.headers['set-cookie']].flat()
+    expect(cookies.some((c) => c.includes('Max-Age=0') || c.includes('Expires='))).toBe(true)
   })
 
   it('should return 200 when user is not logged in', async () => {
