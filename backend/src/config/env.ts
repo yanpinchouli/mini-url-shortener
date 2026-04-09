@@ -15,6 +15,8 @@ const EnvSchema = z.object({
 })
 
 const parsed = EnvSchema.safeParse(process.env)
+
+/* v8 ignore next 8 */
 if (!parsed.success) {
   const { fieldErrors } = z.flattenError(parsed.error)
 
