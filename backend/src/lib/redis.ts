@@ -1,11 +1,9 @@
 import { createClient } from 'redis'
 
-if (!process.env.REDIS_URL) throw new Error('ENV REDIS_URL is not defined')
+import { env } from '@/config/env.js'
 
 const redisClient = createClient({
-  url: process.env.REDIS_URL,
+  url: env.REDIS_URL,
 })
-
-await redisClient.connect()
 
 export { redisClient }
